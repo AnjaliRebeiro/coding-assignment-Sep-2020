@@ -1,0 +1,24 @@
+import org.apache.spark.sql.functions.rand
+import org.apache.spark.sql.functions._
+
+val df = spark.read.option("delimiter",":").csv("/FileStore/tables/input.txt")
+val df1 = df.withColumnRenamed("_c0","Goodies").
+withColumnRenamed("_c1","Prices")
+
+println("Input file")
+df1.show()
+val n = 4
+
+println("picking random values from input file")
+val df2 = df1.orderBy(rand()).limit(n)
+df2.show()
+df2.write.mode("overwrite").save("/FileStore/tables/output.txt")
+
+val a = spark.read.option("delimiter",":").parquet("/FileStore/tables/output.txt")
+a.show()
+
+a.agg(min("Prices")).show
+a.agg(max("Prices")).show
+
+println("Difference between highest and lowest prices")
+a.agg(min("Prices") - max("Prices")).show
